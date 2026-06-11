@@ -1,0 +1,22 @@
+{
+  description = "A very basic flake";
+
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    utils.url = "github:Cj-bc/my-nix-utils";
+    flix.url = "github:Cj-bc/flix.nix";
+  };
+
+  outputs = { self, nixpkgs, utils, flix }:
+    utils.lib.eachSystems [ "x86_64-linux" "aarch64-linux" ] (system:
+      let pkgs = import nixpkgs { system = system; overlays = [ ]; };
+      in { 
+        packages.${system}.default = pkgs.stdenv.mkDerivation {
+          name = "atproto.flix";
+          version = "0.1.0";
+          src = "src";
+          buildInputs = [ flix.packages.${system}.flix_0_73_0 ];
+        };
+      }
+    );
+}
