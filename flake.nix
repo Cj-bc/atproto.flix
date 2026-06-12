@@ -17,6 +17,10 @@
           src = "src";
           buildInputs = [ flix.packages.${system}.flix_0_73_0 ];
         };
+
+        devShells.${system}.default = pkgs.mkShell {
+          packages = [ flix.packages.${system}.flix_0_73_0 ];
+        };
       }
     );
 }
