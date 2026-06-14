@@ -50,6 +50,10 @@ mod Bsky.Actor {
         case ProfileView.ProfileView(r) => r#postsCount
     }
 
+    pub def createdAt(p: ProfileView): Option[String] = match p {
+        case ProfileView.ProfileView(r) => r#createdAt
+    }
+
     instance Util.Json.FromJson[ProfileView] {
         pub def fromJson(j: Json): Result[JsonError, ProfileView] =
             forM (

@@ -28,7 +28,7 @@ mod Test.Actor {
         let json = String.concat(
             String.concat("{\"did\":\"did:plc:abc\",\"handle\":\"test.bsky.social\",",
                           "\"displayName\":\"Test User\",\"description\":\"A bio\","),
-            "\"followersCount\":42,\"followsCount\":10,\"postsCount\":100}"
+            "\"followersCount\":42,\"followsCount\":10,\"postsCount\":100,\"createdAt\":\"2023-01-01T00:00:00Z\"}"
         );
         match runWithMock(json) {
             case Ok(p) =>
@@ -38,7 +38,8 @@ mod Test.Actor {
                 Assert.assertEq(expected = Some("A bio"),      Bsky.Actor.description(p));
                 Assert.assertEq(expected = Some(42i64),        Bsky.Actor.followersCount(p));
                 Assert.assertEq(expected = Some(10i64),        Bsky.Actor.followsCount(p));
-                Assert.assertEq(expected = Some(100i64),       Bsky.Actor.postsCount(p))
+                Assert.assertEq(expected = Some(100i64),       Bsky.Actor.postsCount(p));
+                Assert.assertEq(expected = Some("2023-01-01T00:00:00Z"), Bsky.Actor.createdAt(p))
             case Err(e) => Assert.fail("Expected Ok, got ${e}")
         }
 

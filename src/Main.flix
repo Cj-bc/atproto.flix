@@ -10,7 +10,8 @@ def main(): Unit \ IO =
                     println("Description: ${Option.getWithDefault("(none)", Bsky.Actor.description(p))}");
                     println("Followers:   ${Option.map(Int64.toString, Bsky.Actor.followersCount(p)) |> Option.getWithDefault("(none)")}");
                     println("Following:   ${Option.map(Int64.toString, Bsky.Actor.followsCount(p)) |> Option.getWithDefault("(none)")}");
-                    println("Posts:       ${Option.map(Int64.toString, Bsky.Actor.postsCount(p)) |> Option.getWithDefault("(none)")}")
+                    println("Posts:       ${Option.map(Int64.toString, Bsky.Actor.postsCount(p)) |> Option.getWithDefault("(none)")}");
+                    println("Created:     ${Option.getWithDefault("(none)", Bsky.Actor.createdAt(p))}")
                 case Err(e) =>
                     println("Error: ${e}")
             }
