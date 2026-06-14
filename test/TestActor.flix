@@ -1,6 +1,8 @@
 mod Test.Actor {
 
     use Atproto.XrpcError
+    use Bsky.Actor.ProfileViewDetailed
+    use Bsky.Actor.ProfileViewDetailed.ProfileViewDetailed
     use Net.Body
     use Net.HttpResponse
     use Net.HttpResponse.HttpResponse
@@ -15,7 +17,7 @@ mod Test.Actor {
             body    = Body.Body.Text(body)
         })
 
-    def runWithMock(json: String): Result[XrpcError, Bsky.Actor.ProfileView] =
+    def runWithMock(json: String): Result[XrpcError, ProfileViewDetailed] =
         run {
             Bsky.Actor.getProfile("test.bsky.social")
         } with handler Net.Http.Http {
@@ -28,18 +30,21 @@ mod Test.Actor {
         let json = String.concat(
             String.concat("{\"did\":\"did:plc:abc\",\"handle\":\"test.bsky.social\",",
                           "\"displayName\":\"Test User\",\"description\":\"A bio\","),
-            "\"followersCount\":42,\"followsCount\":10,\"postsCount\":100,\"createdAt\":\"2023-01-01T00:00:00Z\"}"
+            String.concat("\"website\":\"https://example.com\",\"banner\":\"https://cdn/banner.jpg\",",
+                          "\"followersCount\":42,\"followsCount\":10,\"postsCount\":100,\"createdAt\":\"2023-01-01T00:00:00Z\"}")
         );
         match runWithMock(json) {
             case Ok(p) =>
-                Assert.assertEq(expected = "did:plc:abc",      Bsky.Actor.did(p));
-                Assert.assertEq(expected = "test.bsky.social", Bsky.Actor.handle(p));
-                Assert.assertEq(expected = Some("Test User"),  Bsky.Actor.displayName(p));
-                Assert.assertEq(expected = Some("A bio"),      Bsky.Actor.description(p));
-                Assert.assertEq(expected = Some(42i64),        Bsky.Actor.followersCount(p));
-                Assert.assertEq(expected = Some(10i64),        Bsky.Actor.followsCount(p));
-                Assert.assertEq(expected = Some(100i64),       Bsky.Actor.postsCount(p));
-                Assert.assertEq(expected = Some("2023-01-01T00:00:00Z"), Bsky.Actor.createdAt(p))
+                Assert.assertEq(expected = "did:plc:abc",      ProfileViewDetailed.did(p));
+                Assert.assertEq(expected = "test.bsky.social", ProfileViewDetailed.handle(p));
+                Assert.assertEq(expected = Some("Test User"),  ProfileViewDetailed.displayName(p));
+                Assert.assertEq(expected = Some("A bio"),      ProfileViewDetailed.description(p));
+                Assert.assertEq(expected = Some("https://example.com"), ProfileViewDetailed.website(p));
+                Assert.assertEq(expected = Some("https://cdn/banner.jpg"), ProfileViewDetailed.banner(p));
+                Assert.assertEq(expected = Some(42i64),        ProfileViewDetailed.followersCount(p));
+                Assert.assertEq(expected = Some(10i64),        ProfileViewDetailed.followsCount(p));
+                Assert.assertEq(expected = Some(100i64),       ProfileViewDetailed.postsCount(p));
+                Assert.assertEq(expected = Some("2023-01-01T00:00:00Z"), ProfileViewDetailed.createdAt(p))
             case Err(e) => Assert.fail("Expected Ok, got ${e}")
         }
 
@@ -49,10 +54,10 @@ mod Test.Actor {
         let json = "{\"did\":\"did:plc:min\",\"handle\":\"min.bsky.social\"}";
         match runWithMock(json) {
             case Ok(p) =>
-                Assert.assertEq(expected = "did:plc:min",       Bsky.Actor.did(p));
-                Assert.assertEq(expected = "min.bsky.social",   Bsky.Actor.handle(p));
-                Assert.assertEq(expected = None,                Bsky.Actor.displayName(p));
-                Assert.assertEq(expected = None,                Bsky.Actor.followersCount(p))
+                Assert.assertEq(expected = "did:plc:min",       ProfileViewDetailed.did(p));
+                Assert.assertEq(expected = "min.bsky.social",   ProfileViewDetailed.handle(p));
+                Assert.assertEq(expected = None,                ProfileViewDetailed.displayName(p));
+                Assert.assertEq(expected = None,                ProfileViewDetailed.followersCount(p))
             case Err(e) => Assert.fail("Expected Ok, got ${e}")
         }
 
@@ -65,7 +70,7 @@ mod Test.Actor {
         );
         match runWithMock(json) {
             case Ok(p) =>
-                Assert.assertEq(expected = "did:plc:x", Bsky.Actor.did(p))
+                Assert.assertEq(expected = "did:plc:x", ProfileViewDetailed.did(p))
             case Err(e) => Assert.fail("Expected Ok with unknown fields ignored, got ${e}")
         }
 
