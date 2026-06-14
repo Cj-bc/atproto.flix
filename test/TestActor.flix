@@ -8,6 +8,8 @@ mod Test.Actor {
     use Net.HttpResponse.HttpResponse
     use Util.Json.JsonError
     use Util.Json.JsonError.DecodeErrorKind.{MissingKey}
+    use Util.Json.Json.{JObject, JString, JNumber, JBool}
+    use Util.Json.toCompactString
 
     def mockResp(status: Int32, body: String): HttpResponse =
         HttpResponse({
@@ -27,12 +29,18 @@ mod Test.Actor {
     // Test 1a: success with all optional fields
     @Test
     def testDecodeFullProfile(): Unit \ Assert =
-        let json = String.concat(
-            String.concat("{\"did\":\"did:plc:abc\",\"handle\":\"test.bsky.social\",",
-                          "\"displayName\":\"Test User\",\"description\":\"A bio\","),
-            String.concat("\"website\":\"https://example.com\",\"banner\":\"https://cdn/banner.jpg\",",
-                          "\"followersCount\":42,\"followsCount\":10,\"postsCount\":100,\"createdAt\":\"2023-01-01T00:00:00Z\"}")
-        );
+        let json = toCompactString(JObject(Map#{
+            "did"            => JString("did:plc:abc"),
+            "handle"         => JString("test.bsky.social"),
+            "displayName"    => JString("Test User"),
+            "description"    => JString("A bio"),
+            "website"        => JString("https://example.com"),
+            "banner"         => JString("https://cdn/banner.jpg"),
+            "followersCount" => JNumber(Int64.toBigDecimal(42i64)),
+            "followsCount"   => JNumber(Int64.toBigDecimal(10i64)),
+            "postsCount"     => JNumber(Int64.toBigDecimal(100i64)),
+            "createdAt"      => JString("2023-01-01T00:00:00Z")
+        }));
         match runWithMock(json) {
             case Ok(p) =>
                 Assert.assertEq(expected = "did:plc:abc",      ProfileViewDetailed.did(p));
@@ -51,7 +59,10 @@ mod Test.Actor {
     // Test 1b: success with only required fields
     @Test
     def testDecodeMinimalProfile(): Unit \ Assert =
-        let json = "{\"did\":\"did:plc:min\",\"handle\":\"min.bsky.social\"}";
+        let json = toCompactString(JObject(Map#{
+            "did"    => JString("did:plc:min"),
+            "handle" => JString("min.bsky.social")
+        }));
         match runWithMock(json) {
             case Ok(p) =>
                 Assert.assertEq(expected = "did:plc:min",       ProfileViewDetailed.did(p));
@@ -64,10 +75,12 @@ mod Test.Actor {
     // Test 2: unknown fields are ignored
     @Test
     def testUnknownFieldsIgnored(): Unit \ Assert =
-        let json = String.concat(
-            "{\"did\":\"did:plc:x\",\"handle\":\"x.bsky.social\",",
-            "\"futureField\":{\"nested\":true},\"anotherNew\":123}"
-        );
+        let json = toCompactString(JObject(Map#{
+            "did"         => JString("did:plc:x"),
+            "handle"      => JString("x.bsky.social"),
+            "futureField" => JObject(Map#{"nested" => JBool(true)}),
+            "anotherNew"  => JNumber(Int64.toBigDecimal(123i64))
+        }));
         match runWithMock(json) {
             case Ok(p) =>
                 Assert.assertEq(expected = "did:plc:x", ProfileViewDetailed.did(p))
@@ -77,7 +90,9 @@ mod Test.Actor {
     // Test 5: missing required 'did' -> Decode error with MissingKey("did")
     @Test
     def testMissingDidField(): Unit \ Assert =
-        let json = "{\"handle\":\"no-did.bsky.social\"}";
+        let json = toCompactString(JObject(Map#{
+            "handle" => JString("no-did.bsky.social")
+        }));
         match runWithMock(json) {
             case Err(XrpcError.Decode(je)) =>
                 match je {
