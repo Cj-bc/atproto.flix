@@ -7,6 +7,8 @@ mod Test.Xrpc {
     use Net.HttpResponse
     use Net.HttpResponse.HttpResponse
     use Util.Json.Json
+    use Util.Json.Json.{JObject, JString}
+    use Util.Json.toCompactString
 
     def mockResp(status: Int32, body: String): HttpResponse =
         HttpResponse({
@@ -19,7 +21,11 @@ mod Test.Xrpc {
     // Test 3: XRPC Protocol error
     @Test
     def testProtocolError(): Unit \ Assert =
-        let resp = mockResp(400, "{\"error\":\"InvalidRequest\",\"message\":\"bad actor\"}");
+        let body = toCompactString(JObject(Map#{
+            "error"   => JString("InvalidRequest"),
+            "message" => JString("bad actor")
+        }));
+        let resp = mockResp(400, body);
         let result: Result[XrpcError, Json] = run {
             Atproto.Xrpc.xrpcQuery("app.bsky.actor.getProfile", ("actor", "test") :: Nil)
         } with handler Net.Http.Http {
@@ -74,7 +80,7 @@ mod Test.Xrpc {
             } with handler Net.Http.Http {
                 def request(req, k) = {
                     Ref.put(Net.HttpRequest.url(req), capturedUrl);
-                    k(Ok(mockResp(200, "{}")))
+                    k(Ok(mockResp(200, toCompactString(JObject(Map#{})))))
                 }
             };
             let url = Ref.get(capturedUrl);
